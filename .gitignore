@@ -1,0 +1,9 @@
+.project
+.classpath
+**/Thumbs.db
+.settings/**
+src/main/webapp/WEB-INF/classes/**
+src/main/webapp/WEB-INF/lib/**
+target/**
+*.db
+*.orig
