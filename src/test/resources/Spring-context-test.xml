@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd  
+    	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd 
+    	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd"
+	default-init-method="init" default-destroy-method="destroy"
+	default-autowire="byName">
+
+	<context:annotation-config />
+	<!-- <mvc:annotation-driven /> -->
+	<context:component-scan base-package="cn.telecom.traffic" />
+
+	<util:properties id="externalProperties">
+		<prop key="service.telecom.url">http://202.103.25.97/bizflow/service/sp_order!order.action</prop>
+		<prop key="service.telecom.iv">8888159601152533</prop>
+		<prop key="service.telecom.password">H5gOs1ZshKZ6WikN</prop>
+	</util:properties>
+
+	<bean class="org.springframework.beans.factory.config.PropertiesFactoryBean"
+		id="envProps">
+		<property name="locations">
+			<list>
+				<value>classpath:messages.properties</value>
+			</list>
+		</property>
+		<property name="properties" ref="externalProperties" />
+	</bean>
+	
+	<context:property-placeholder
+		properties-ref="envProps" />
+		
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver">
+		</property>
+		<property name="url">
+			<value>jdbc:mysql://localhost:3306/traffic?useUnicode=true</value>
+		</property>
+		<property name="username">
+			<value>root</value>
+		</property>
+		<property name="password">
+			<value>root</value>
+		</property>
+		<property name="maxActive" value="20" />
+		<property name="maxIdle" value="5" />
+		<property name="maxWait" value="5000" />
+	</bean>
+
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">
+					org.hibernate.dialect.MySQLDialect
+				</prop>
+				<!-- <prop key="hibernate.c3p0.acquire_increment">1</prop> <prop key="hibernate.c3p0.minPoolSize">2</prop> 
+					<prop key="hibernate.c3p0.maxPoolSize">50</prop> <prop key="hibernate.c3p0.timeout">1800</prop> 
+					<prop key="hibernate.c3p0.max_statement">0</prop> <prop key="hibernate.c3p0.idle_test_period">30</prop> -->
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
+		</property>
+		<property name="annotatedClasses">
+			<list>
+				<value>cn.telecom.traffic.model.dao.User</value>
+				<value>cn.telecom.traffic.model.dao.Order</value>
+				<value>cn.telecom.traffic.model.dao.Traffic</value>
+			</list>
+		</property>
+	</bean>
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager"></bean>
+	<tx:advice id="txAdvice">
+		<tx:attributes>
+			<tx:method name="get*" read-only="true" />
+			<tx:method name="load*" read-only="true" />
+			<tx:method name="*" />
+		</tx:attributes>
+	</tx:advice>
+	<aop:config proxy-target-class="true">
+		<aop:advisor advice-ref="txAdvice"
+			pointcut="execution(* cn.telecom.traffic.model.managers.*.*(..))" />
+	</aop:config>
+
+</beans>
